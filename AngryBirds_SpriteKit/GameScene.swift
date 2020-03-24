@@ -15,6 +15,7 @@ class GameScene: SKScene {
     var bird2 = SKSpriteNode()
     var bird = SKSpriteNode()
     var gameStarted = false
+    var originalPosition: CGPoint?
     
     //Box Objects
     var box1 = SKSpriteNode()
@@ -37,6 +38,8 @@ class GameScene: SKScene {
         bird2.zPosition = 1
         self.addChild(bird2)
        */
+        
+        originalPosition = bird.position
         
         bird = childNode(withName: "bird") as! SKSpriteNode
         let birdTexture = SKTexture(imageNamed: "bird")
@@ -146,7 +149,30 @@ class GameScene: SKScene {
     }
     
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
-        
+        if gameStarted == false {
+                      
+                      if let touch = touches.first {
+                      let touchLocation = touch.location(in: self)
+                      let touchNodes = nodes(at: touchLocation)
+                          if touchNodes.isEmpty == false {
+                              for node in touchNodes {
+                                  if let sprite = node as? SKSpriteNode {
+                                      if sprite == bird {
+                                          
+                                        let dx = -(touchLocation.x - originalPosition!.x)
+                                        let dy = -(touchLocation.y - originalPosition!.y)
+                                        
+                                        let impulse = CGVector(dx: dx, dy: dy)
+                                        
+                                        bird.physicsBody?.applyImpulse(impulse)
+                                        bird.physicsBody?.affectedByGravity = true
+                                        gameStarted = true
+                                      }
+                                  }
+                              }
+                          }
+                      }
+                  }
     }
     
     override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
@@ -155,6 +181,18 @@ class GameScene: SKScene {
     
     
     override func update(_ currentTime: TimeInterval) {
-        // Called before each frame is rendered
+        
+        if let birdPhysicsBody = bird.physicsBody {
+            if birdPhysicsBody.velocity.dx <= 0.1 && birdPhysicsBody.velocity.dy <= 0.1 && birdPhysicsBody.angularVelocity <= 0.1 && gameStarted == true {
+                
+                bird.physicsBody?.affectedByGravity = false
+                bird.physicsBody?.velocity = CGVector(dx: 0, dy: 0)
+                bird.physicsBody?.angularVelocity = 0
+                bird.zPosition = 1
+                bird.position = originalPosition!
+                gameStarted = false
+            }
+        }
+        
     }
 }
